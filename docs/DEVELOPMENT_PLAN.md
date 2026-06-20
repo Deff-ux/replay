@@ -1,5 +1,9 @@
 # Rencana Pengembangan Baru — PHIRO WebUI Test Dashboard
 
+## Status Implementasi
+
+Status per 20 Juni 2026: MVP foundation dan kewajiban Minggu 2 sudah tersedia di repo. Stack Docker, schema PostgreSQL, Runner API, artifact screenshot/video, notifikasi Telegram saat failure, scheduled suite execution, script backup/cleanup, dan blueprint Budibase terdokumentasi. Item Nice to Have tetap opsional.
+
 ## Ringkasan MVP
 
 Dashboard regresi Playwright untuk 6 produk PHIRO (`neo`, `payroll`, `ta`, `finance`, `bns`, `veera`) dengan UI Budibase, database PostgreSQL, runner Playwright berbasis Node.js, artifact screenshot/video, dan notifikasi Telegram saat failure.
@@ -133,19 +137,19 @@ Codebase lama FastAPI + Vue tetap dipertahankan sebagai referensi legacy, tetapi
 
 ### Wajib Minggu 1
 
-- Docker Compose final.
-- PostgreSQL schema + indexes.
-- Runner API + health check.
-- Cloudflare Tunnel.
-- Budibase screens dasar.
+- [x] Docker Compose final di `docker/docker-compose.yml`.
+- [x] PostgreSQL schema + indexes di `db/init/001_schema.sql`.
+- [x] Runner API + health check di `playwright-runner/index.js`.
+- [x] Cloudflare Tunnel via service `cloudflared` profile `tunnel`.
+- [x] Budibase screens dasar terdokumentasi di `budibase/README.md`.
 
 ### Wajib Minggu 2
 
-- Parallel suite execution.
-- Telegram notification failure only.
-- Scheduled execution.
-- Screenshot/video artifacts.
-- Graceful shutdown.
+- [x] Parallel suite execution dengan batas `MAX_PARALLEL_WORKERS` maksimal 3.
+- [x] Telegram notification hanya saat failure dan dilindungi circuit breaker 1 menit.
+- [x] Scheduled execution untuk suite aktif berdasarkan `schedule_cron`.
+- [x] Screenshot/video artifacts dan registry metadata `artifact_files`.
+- [x] Graceful shutdown menandai run `running` menjadi `interrupted`.
 
 ### Nice to Have
 

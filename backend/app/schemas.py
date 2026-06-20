@@ -1,0 +1,86 @@
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field
+
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    role: str = "qa"
+
+class UserRead(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    role: str
+    is_active: bool
+    model_config = {"from_attributes": True}
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class EnvironmentBase(BaseModel):
+    name: str
+    base_url: str
+    auth_type: str = "none"
+    auth_config: dict = Field(default_factory=dict)
+    variables: dict = Field(default_factory=dict)
+    is_active: bool = True
+
+class EnvironmentRead(EnvironmentBase):
+    id: int
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class TestCaseBase(BaseModel):
+    name: str
+    product: str
+    module: str | None = None
+    tags: list = Field(default_factory=list)
+    status: str = "active"
+    steps: list = Field(default_factory=list)
+    assertions: list = Field(default_factory=list)
+
+class TestCaseRead(TestCaseBase):
+    id: int
+    created_by: int | None = None
+    created_at: datetime
+    updated_at: datetime
+    model_config = {"from_attributes": True}
+
+class TestSuiteBase(BaseModel):
+    name: str
+    product: str
+    suite_type: str = "smoke"
+    test_case_order: list[int] = Field(default_factory=list)
+    environment_id: int | None = None
+    cron_schedule: str | None = None
+    is_active: bool = True
+
+class TestSuiteRead(TestSuiteBase):
+    id: int
+    created_by: int | None = None
+    created_at: datetime
+    updated_at: datetime
+    model_config = {"from_attributes": True}
+
+class RunCreate(BaseModel):
+    suite_id: int | None = None
+    test_case_ids: list[int] = Field(default_factory=list)
+    environment_id: int | None = None
+    triggered_by: str = "manual"
+    trigger_detail: dict = Field(default_factory=dict)
+
+class RunRead(RunCreate):
+    id: int
+    status: str
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    duration_ms: int | None = None
+    created_at: datetime
+    model_config = {"from_attributes": True}

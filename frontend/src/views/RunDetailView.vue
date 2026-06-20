@@ -1,0 +1,1 @@
+<template><h1>Run Detail</h1><progress max="100" :value="progress"/><div v-for="step in steps" :key="step.step_index"><StatusBadge :status="step.status"/> {{ step.action }}</div></template><script setup>import {ref} from 'vue';import StatusBadge from '../components/common/StatusBadge.vue';const progress=ref(0);const steps=ref([])</script>

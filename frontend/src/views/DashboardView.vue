@@ -1,0 +1,1 @@
+<template><h1>Dashboard</h1><div class="cards"><div class="card">Total Tests</div><div class="card">Pass Rate</div><div class="card">Last Run</div><div class="card">Avg Duration</div></div></template>

@@ -1,0 +1,1 @@
+<template><AppLayout v-if="auth.isAuthenticated"><router-view /></AppLayout><router-view v-else /></template><script setup>import AppLayout from './components/layout/AppLayout.vue'; import { useAuthStore } from './stores/auth'; const auth=useAuthStore()</script>

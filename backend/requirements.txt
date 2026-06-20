@@ -1,0 +1,16 @@
+fastapi==0.115.*
+uvicorn[standard]==0.32.*
+sqlalchemy[asyncio]==2.0.*
+aiosqlite==0.20.*
+pydantic==2.*
+pydantic-settings==2.*
+pyjwt==2.*
+bcrypt==4.*
+playwright==1.50.*
+apscheduler==3.10.*
+httpx==0.28.*
+python-multipart==0.0.*
+jinja2==3.1.*
+pixelmatch==0.3.*
+Pillow==11.*
+weasyprint==62.*

@@ -16,6 +16,8 @@ cp .env.example .env
 # isi DB_PASSWORD, JWT_SECRET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 cd docker
 docker compose up -d --build
+# optional: jalankan tunnel terkelola Cloudflare jika CLOUDFLARE_TUNNEL_TOKEN sudah diisi
+docker compose --profile tunnel up -d cloudflared
 ```
 
 Akses Budibase melalui Cloudflare Tunnel:
@@ -39,9 +41,9 @@ test.defrinogionaldo.com → http://localhost:8446
 
 | Method | Endpoint | Fungsi |
 | --- | --- | --- |
-| `GET` | `/api/health` | Health check DB dan artifact directory |
+| `GET` | `/api/health` | Health check DB, artifact directory, dan uptime |
 | `POST` | `/api/run` | Queue single test case |
-| `POST` | `/api/suite` | Queue suite dengan max worker |
+| `POST` | `/api/suite` | Queue suite dengan maksimal 3 worker |
 | `GET` | `/api/status/:runId` | Polling status run |
 
 ## Legacy App

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS test_cases (
 CREATE INDEX IF NOT EXISTS idx_tc_product ON test_cases(product);
 CREATE INDEX IF NOT EXISTS idx_tc_status ON test_cases(status);
 CREATE INDEX IF NOT EXISTS idx_tc_tags ON test_cases USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_tc_created ON test_cases(created_at DESC);
 
 CREATE TABLE IF NOT EXISTS suites (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS suites (
 );
 CREATE INDEX IF NOT EXISTS idx_suites_product ON suites(product);
 CREATE INDEX IF NOT EXISTS idx_suites_schedule_enabled ON suites(schedule_enabled);
+CREATE INDEX IF NOT EXISTS idx_suites_created ON suites(created_at DESC);
 
 CREATE TABLE IF NOT EXISTS test_runs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -51,6 +53,8 @@ CREATE TABLE IF NOT EXISTS test_runs (
 CREATE INDEX IF NOT EXISTS idx_tr_status ON test_runs(status);
 CREATE INDEX IF NOT EXISTS idx_tr_created ON test_runs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tr_suite ON test_runs(suite_id);
+CREATE INDEX IF NOT EXISTS idx_tr_case ON test_runs(test_case_id);
+CREATE INDEX IF NOT EXISTS idx_tr_product_created ON test_runs(created_at DESC, status);
 
 CREATE TABLE IF NOT EXISTS environments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

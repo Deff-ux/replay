@@ -107,6 +107,23 @@ app.get('/api/status/:runId', asyncRoute(async (req, res) => {
   return res.json(result.rows[0]);
 }));
 
+app.get('/api/artifacts/:runId/*', asyncRoute(async (req, res) => {
+  const relativePath = req.params[0];
+  if (!relativePath || relativePath.includes('..')) return res.status(400).json({ error: 'Invalid artifact path' });
+
+  const artifact = await pool.query(
+    'SELECT file_path, artifact_type FROM artifact_files WHERE run_id = $1 AND public_path = $2',
+    [req.params.runId, `/api/artifacts/${req.params.runId}/${relativePath}`],
+  );
+  if (!artifact.rows.length) return res.status(404).json({ error: 'Artifact not found' });
+
+  const absolutePath = path.resolve(artifact.rows[0].file_path);
+  const artifactRoot = path.resolve(ARTIFACT_DIR);
+  if (!absolutePath.startsWith(artifactRoot)) return res.status(403).json({ error: 'Forbidden' });
+
+  return res.sendFile(absolutePath);
+}));
+
 app.use((error, req, res, _next) => {
   logger.error('Unhandled API error', { path: req.path, error: error.message, stack: error.stack });
   res.status(500).json({ error: 'Internal server error' });
@@ -170,6 +187,7 @@ async function executeSingleTest(testId, environment, runId, attempt = 0) {
     await fs.mkdir(runDir, { recursive: true });
     const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir: runDir } });
     const page = await context.newPage();
+    let videoPath = null;
 
     const steps = testCase.rows[0].steps || [];
     for (let i = 0; i < steps.length; i += 1) {
@@ -178,20 +196,26 @@ async function executeSingleTest(testId, environment, runId, attempt = 0) {
         const screenshotPath = path.join(runDir, `step-${i}.png`);
         await page.screenshot({ path: screenshotPath, fullPage: true });
         await redactSensitiveAreas(screenshotPath);
+        await registerArtifact(runId, testId, 'screenshot', screenshotPath);
         await logActivity('step_finish', 'test_case', testId, { runId, step: i, attempt });
       } catch (error) {
         const screenshotPath = path.join(runDir, `step-${i}-error.png`);
         await page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => null);
         await redactSensitiveAreas(screenshotPath);
+        await registerArtifact(runId, testId, 'screenshot', screenshotPath);
         logger.error('Step failed', { runId, testId, step: i, attempt, error: error.message });
+        videoPath = await page.video()?.path().catch(() => null);
         await context.close().catch(() => null);
+        if (videoPath) await registerArtifact(runId, testId, 'video', videoPath);
         return { testId, passed: false, step: i, error: error.message, duration: Date.now() - startTime };
       }
     }
 
     const assertions = testCase.rows[0].assertions || [];
     for (let i = 0; i < assertions.length; i += 1) await executeAssertion(page, assertions[i]);
+    videoPath = await page.video()?.path().catch(() => null);
     await context.close();
+    if (videoPath) await registerArtifact(runId, testId, 'video', videoPath);
     return { testId, passed: true, duration: Date.now() - startTime };
   } catch (error) {
     logger.error('Test execution failed', { runId, testId, attempt, error: error.message });
@@ -252,6 +276,19 @@ async function finishRun(runId, results) {
 
 async function updateProgress(runId, completed, total) {
   await pool.query('UPDATE test_runs SET progress = $1 WHERE run_id = $2', [total ? Math.round((completed / total) * 100) : 100, runId]);
+}
+
+async function registerArtifact(runId, testCaseId, artifactType, filePath) {
+  if (!filePath) return;
+  const stat = await fs.stat(filePath).catch(() => null);
+  if (!stat) return;
+  const relativePath = path.relative(path.join(ARTIFACT_DIR, runId), filePath).split(path.sep).join('/');
+  const publicPath = `/api/artifacts/${runId}/${relativePath}`;
+  await pool.query(
+    `INSERT INTO artifact_files (run_id, test_case_id, artifact_type, file_path, public_path, file_size_bytes)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [runId, testCaseId, artifactType, filePath, publicPath, stat.size],
+  ).catch((error) => logger.warn('Failed to register artifact', { runId, testCaseId, artifactType, error: error.message }));
 }
 
 async function logActivity(action, targetType, targetId, metadata) {

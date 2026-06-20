@@ -84,3 +84,53 @@ class RunRead(RunCreate):
     duration_ms: int | None = None
     created_at: datetime
     model_config = {"from_attributes": True}
+
+
+class DashboardStats(BaseModel):
+    total_tests: int
+    total_suites: int
+    total_runs: int
+    pass_rate: float
+    avg_duration_ms: int
+    last_run: RunRead | None = None
+
+class UserUpdate(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+    password: str | None = None
+    role: str | None = None
+    is_active: bool | None = None
+
+
+class ReportRead(BaseModel):
+    id: int
+    run_id: int
+    summary: dict = Field(default_factory=dict)
+    pdf_path: str | None = None
+    html_path: str | None = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class SeedTemplateRead(BaseModel):
+    name: str
+    description: str | None = None
+    parameters: dict = Field(default_factory=dict)
+
+
+class SeedRunRequest(BaseModel):
+    template_name: str
+    params: dict = Field(default_factory=dict)
+    run_id: str
+
+
+class SeedCleanupRequest(BaseModel):
+    run_id: str
+    method: str = "prefix"
+
+
+class WebhookRunRequest(BaseModel):
+    suite_id: int | None = None
+    test_case_ids: list[int] = Field(default_factory=list)
+    environment_id: int | None = None
+    trigger_detail: dict = Field(default_factory=dict)

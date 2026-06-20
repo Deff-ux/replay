@@ -10,13 +10,13 @@ Dashboard regresi Playwright untuk 6 produk PHIRO (`neo`, `payroll`, `ta`, `fina
 
 **Target MVP:** 2 minggu  
 **VPS target:** `xbata-mm84` — Ubuntu 24.04, 4 vCPU, 7.8 GB RAM, 58 GB disk  
-**Domain:** `test.defrinogionaldo.com` via Cloudflare Tunnel ke `localhost:8446`
+**Domain:** `test.defrinogionaldo.com` via service `cloudflared` ke Budibase internal port `80`
 
 ## Arsitektur Final
 
 ```text
-Cloudflare Tunnel
-  → Budibase :8446
+Cloudflare Tunnel (`cloudflared`)
+  → Budibase :80
       → PostgreSQL :5432
       → Playwright Runner API :8550 (internal only)
           → /artifacts screenshot + video
@@ -27,7 +27,7 @@ Cloudflare Tunnel
 
 ### 1. Infrastruktur Docker
 
-- Jalankan `budibase/budibase:latest` pada `127.0.0.1:8446`.
+- Jalankan `budibase/budibase:latest` pada port internal `80` dan expose hanya ke network Docker.
 - Jalankan `postgres:16-alpine` dengan health check.
 - Jalankan `playwright-runner` internal pada port `8550`.
 - Gunakan volume persisten:
@@ -68,7 +68,7 @@ Konfigurasi public hostname:
 
 - Subdomain: `test`
 - Domain: `defrinogionaldo.com`
-- Service: `http://localhost:8446`
+- Service: `http://budibase:80` dari container `cloudflared`
 
 ## Fase 2 — Budibase App (Minggu 1-2)
 
@@ -132,6 +132,9 @@ Codebase lama FastAPI + Vue tetap dipertahankan sebagai referensi legacy, tetapi
 - `scripts/cleanup-artifacts.sh`
 - `scripts/backup-db.sh`
 - `scripts/systemd/testdashboard.service`
+- `scripts/systemd/testdashboard.timer`
+- `.github/workflows/ci.yml`
+- `.github/workflows/deploy.yml`
 
 ## Prioritas Implementasi
 
@@ -140,8 +143,9 @@ Codebase lama FastAPI + Vue tetap dipertahankan sebagai referensi legacy, tetapi
 - [x] Docker Compose final di `docker/docker-compose.yml`.
 - [x] PostgreSQL schema + indexes di `db/init/001_schema.sql`.
 - [x] Runner API + health check di `playwright-runner/index.js`.
-- [x] Cloudflare Tunnel via service `cloudflared` profile `tunnel`.
+- [x] Cloudflare Tunnel via service `cloudflared`.
 - [x] Budibase screens dasar terdokumentasi di `budibase/README.md`.
+- [x] Budibase app automation via `budibase/setup-app.js` dan profile Compose `setup`.
 
 ### Wajib Minggu 2
 
@@ -153,7 +157,7 @@ Codebase lama FastAPI + Vue tetap dipertahankan sebagai referensi legacy, tetapi
 
 ### Nice to Have
 
-- GitHub Actions CI/CD.
+- [x] GitHub Actions CI/CD.
 - OpenProject auto issue.
 - Visual diff.
 - Multi-browser.

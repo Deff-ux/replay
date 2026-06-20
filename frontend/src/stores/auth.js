@@ -1,0 +1,2 @@
+import { defineStore } from 'pinia'; import axios from 'axios';
+export const useAuthStore=defineStore('auth',{state:()=>({token:localStorage.getItem('token'),user:null}),getters:{isAuthenticated:s=>Boolean(s.token)},actions:{async login(username,password){const {data}=await axios.post('/api/v1/auth/login',{username,password});this.token=data.access_token;localStorage.setItem('token',this.token);axios.defaults.headers.common.Authorization=`Bearer ${this.token}`},logout(){this.token=null;localStorage.removeItem('token');delete axios.defaults.headers.common.Authorization}}})

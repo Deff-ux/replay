@@ -1,0 +1,1 @@
+<template><aside class="sidebar"><h2>Replay</h2><RouterLink to="/">Dashboard</RouterLink><RouterLink to="/tests">Tests</RouterLink><RouterLink to="/suites/builder">Suite Builder</RouterLink></aside></template>

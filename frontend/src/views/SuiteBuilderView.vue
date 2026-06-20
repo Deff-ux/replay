@@ -1,0 +1,1 @@
+<template><h1>Suite Builder</h1><div class="suite-builder"><section class="card"><h2>Available Tests</h2></section><section class="card"><h2>Suite (drag to reorder)</h2><input v-model="suiteName" placeholder="Suite name"><button>💾 Save Suite</button><button>▶️ Run Now</button></section></div></template><script setup>import {ref} from 'vue';const suiteName=ref('')</script>

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   budibase:
     image: budibase/budibase:latest
@@ -40,6 +38,8 @@ services:
   playwright-runner:
     build:
       context: ../playwright-runner
+    expose:
+      - "8550"
     volumes:
       - test_data:/data
       - test_artifacts:/artifacts
@@ -47,6 +47,10 @@ services:
     environment:
       - DB_CONNECTION=postgresql://budibase:${DB_PASSWORD}@postgres:5432/testdashboard
       - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=8550
+      - ARTIFACT_DIR=/artifacts
+      - IP_ALLOWLIST=${RUNNER_IP_ALLOWLIST:-127.0.0.1,::1,::ffff:127.0.0.1,172.,10.,192.168.}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - MAX_PARALLEL_WORKERS=${MAX_PARALLEL_WORKERS:-3}
       - ARTIFACT_RETENTION_DAYS=${ARTIFACT_RETENTION_DAYS:-30}
@@ -56,6 +60,22 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8550/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - budibase
+    profiles:
+      - tunnel
     restart: unless-stopped
 
 volumes:

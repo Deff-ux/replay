@@ -1,20 +1,65 @@
 version: '3.8'
+
 services:
-  replay:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    ports: ["8446:8446"]
+  budibase:
+    image: budibase/budibase:latest
+    ports:
+      - "127.0.0.1:8446:80"
     volumes:
-      - replay-data:/data
-      - ../backend:/app/backend
+      - budibase_data:/data
     environment:
-      - REPLAY_SECRET_KEY=dev-secret-key-change-in-prod
-      - REPLAY_DEBUG=true
+      - BUDIBASE_ENVIRONMENT=production
+      - BUDIBASE_DB=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=testdashboard
+      - POSTGRES_USER=budibase
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ../db/init:/docker-entrypoint-initdb.d:ro
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=testdashboard
+      - POSTGRES_USER=budibase
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8446/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD-SHELL", "pg_isready -U budibase -d testdashboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  playwright-runner:
+    build:
+      context: ../playwright-runner
+    volumes:
+      - test_data:/data
+      - test_artifacts:/artifacts
+      - /var/log/testdashboard:/var/log/testdashboard
+    environment:
+      - DB_CONNECTION=postgresql://budibase:${DB_PASSWORD}@postgres:5432/testdashboard
+      - NODE_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - MAX_PARALLEL_WORKERS=${MAX_PARALLEL_WORKERS:-3}
+      - ARTIFACT_RETENTION_DAYS=${ARTIFACT_RETENTION_DAYS:-30}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-https://test.defrinogionaldo.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
-  replay-data:
+  budibase_data:
+  pg_data:
+  test_data:
+  test_artifacts:

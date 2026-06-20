@@ -84,3 +84,12 @@ class RunRead(RunCreate):
     duration_ms: int | None = None
     created_at: datetime
     model_config = {"from_attributes": True}
+
+
+class DashboardStats(BaseModel):
+    total_tests: int
+    total_suites: int
+    total_runs: int
+    pass_rate: float
+    avg_duration_ms: int
+    last_run: RunRead | None = None

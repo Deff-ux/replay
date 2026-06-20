@@ -109,8 +109,8 @@ app.get('/api/status/:runId', asyncRoute(async (req, res) => {
   return res.json(result.rows[0]);
 }));
 
-app.get('/api/artifacts/:runId/*', asyncRoute(async (req, res) => {
-  const relativePath = req.params[0];
+app.get('/api/artifacts/:runId/{*wild}', asyncRoute(async (req, res) => {
+  const relativePath = req.params.wild;
   if (!relativePath || relativePath.includes('..')) return res.status(400).json({ error: 'Invalid artifact path' });
 
   const artifact = await pool.query(

@@ -85,4 +85,4 @@ The database seeds disabled schedule records for:
 - Full regression: `0 23 * * 0` (Sunday 23:00).
 - Smoke test: `0 6,18 * * *` (daily 06:00 and 18:00).
 
-Enable them from the Schedule screen after assigning ordered test cases.
+Enable them from the Schedule screen after assigning ordered test cases. The runner scans enabled schedules every 60 seconds and queues matching suites with `triggered_by = schedule`; keep `test_case_ids` non-empty before enabling a schedule.

@@ -43,6 +43,8 @@ const runningBrowsers = new Set();
 let acceptingRequests = true;
 let server;
 let lastNotificationTime = 0;
+const scheduledSuiteLastRun = new Map();
+let scheduleTimer;
 
 function asyncRoute(handler) {
   return (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
@@ -81,7 +83,7 @@ app.post('/api/run', asyncRoute(async (req, res) => {
   if (!isValidEnvironment(environment)) return res.status(400).json({ error: 'Invalid environment' });
 
   const runId = uuidv4();
-  await createRun({ runId, testCaseId, environment, total: 1 });
+  await createRun({ runId, testCaseId, environment, total: 1, triggeredBy: 'manual' });
   setImmediate(() => executeSingleRun(runId, testCaseId, environment).catch((error) => logger.error('Run failed', { runId, error: error.message })));
   return res.status(202).json({ runId, status: 'queued' });
 }));
@@ -96,7 +98,7 @@ app.post('/api/suite', asyncRoute(async (req, res) => {
 
   const testIds = suite.rows[0].test_case_ids || [];
   const runId = uuidv4();
-  await createRun({ runId, suiteId, environment, total: testIds.length });
+  await createRun({ runId, suiteId, environment, total: testIds.length, triggeredBy: 'manual' });
   setImmediate(() => executeSuiteParallel(runId, testIds, environment).catch((error) => logger.error('Suite failed', { runId, error: error.message })));
   return res.status(202).json({ runId, status: 'queued', totalTests: testIds.length, parallel: getMaxParallel(testIds.length) });
 }));
@@ -129,13 +131,67 @@ app.use((error, req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-async function createRun({ runId, suiteId = null, testCaseId = null, environment, total }) {
+async function createRun({ runId, suiteId = null, testCaseId = null, environment, total, triggeredBy = 'manual' }) {
   await pool.query(
     `INSERT INTO test_runs (run_id, suite_id, test_case_id, status, total, environment, triggered_by, created_at)
-     VALUES ($1, $2, $3, 'queued', $4, $5, 'manual', NOW())`,
-    [runId, suiteId, testCaseId, total, environment],
+     VALUES ($1, $2, $3, 'queued', $4, $5, $6, NOW())`,
+    [runId, suiteId, testCaseId, total, environment, triggeredBy],
   );
-  await logActivity('run_queued', suiteId ? 'suite' : 'test_case', suiteId || testCaseId, { runId, environment, total });
+  await logActivity('run_queued', suiteId ? 'suite' : 'test_case', suiteId || testCaseId, { runId, environment, total, triggeredBy });
+}
+
+
+async function queueScheduledSuite(suite, now = new Date()) {
+  const testIds = suite.test_case_ids || [];
+  const runId = uuidv4();
+  const environment = suite.environment || process.env.DEFAULT_SCHEDULE_ENVIRONMENT || 'staging';
+  await createRun({ runId, suiteId: suite.id, environment, total: testIds.length, triggeredBy: 'schedule' });
+  logger.info('Scheduled suite queued', { runId, suiteId: suite.id, suiteName: suite.name, scheduledAt: now.toISOString(), total: testIds.length });
+  setImmediate(() => executeSuiteParallel(runId, testIds, environment).catch((error) => logger.error('Scheduled suite failed', { runId, error: error.message })));
+}
+
+async function runDueSchedules(now = new Date()) {
+  const minuteKey = now.toISOString().slice(0, 16);
+  const result = await pool.query(
+    `SELECT id, name, test_case_ids, schedule_cron
+     FROM suites
+     WHERE schedule_enabled = true AND schedule_cron IS NOT NULL AND array_length(test_case_ids, 1) > 0`,
+  );
+
+  for (const suite of result.rows) {
+    if (scheduledSuiteLastRun.get(suite.id) === minuteKey) continue;
+    if (!cronMatches(suite.schedule_cron, now)) continue;
+    scheduledSuiteLastRun.set(suite.id, minuteKey);
+    await queueScheduledSuite(suite, now);
+  }
+}
+
+function cronMatches(expression, date) {
+  const parts = String(expression || '').trim().split(/\s+/);
+  if (parts.length !== 5) return false;
+  const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+  return matchesCronPart(minute, date.getMinutes(), 0, 59)
+    && matchesCronPart(hour, date.getHours(), 0, 23)
+    && matchesCronPart(dayOfMonth, date.getDate(), 1, 31)
+    && matchesCronPart(month, date.getMonth() + 1, 1, 12)
+    && matchesCronPart(dayOfWeek, date.getDay(), 0, 7, 0);
+}
+
+function matchesCronPart(part, value, min, max, sundayAlias = null) {
+  if (part === '*') return true;
+  return part.split(',').some((token) => {
+    if (/^\d+$/.test(token)) {
+      const parsed = Number.parseInt(token, 10);
+      return parsed === value || (sundayAlias !== null && parsed === 7 && value === sundayAlias);
+    }
+    const range = token.match(/^(\d+)-(\d+)$/);
+    if (range) {
+      const start = Number.parseInt(range[1], 10);
+      const end = Number.parseInt(range[2], 10);
+      return start >= min && end <= max && value >= start && value <= end;
+    }
+    return false;
+  });
 }
 
 async function executeSingleRun(runId, testCaseId, environment) {
@@ -328,6 +384,7 @@ function getMaxParallel(total) {
 async function shutdown(signal) {
   logger.info('Shutdown signal received', { signal });
   acceptingRequests = false;
+  if (scheduleTimer) clearInterval(scheduleTimer);
   if (server) server.close();
   await pool.query("UPDATE test_runs SET status = 'interrupted', finished_at = NOW() WHERE status = 'running'").catch((error) => logger.error('Failed to mark interrupted runs', { error: error.message }));
   await Promise.allSettled(Array.from(runningBrowsers).map((browser) => browser.close()));
@@ -337,5 +394,8 @@ async function shutdown(signal) {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+
+scheduleTimer = setInterval(() => runDueSchedules().catch((error) => logger.error('Schedule scan failed', { error: error.message })), 60000);
+runDueSchedules().catch((error) => logger.error('Initial schedule scan failed', { error: error.message }));
 
 server = app.listen(PORT, HOST, () => logger.info('Playwright Runner listening', { host: HOST, port: PORT }));

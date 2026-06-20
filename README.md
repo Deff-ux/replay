@@ -49,6 +49,8 @@ test.defrinogionaldo.com → http://localhost:8446
 | `GET` | `/api/status/:runId` | Polling status run |
 | `GET` | `/api/artifacts/:runId/*` | Mengambil screenshot/video/log artifact yang terdaftar |
 
+Runner juga melakukan scan jadwal setiap 60 detik untuk suite dengan `schedule_enabled = true`, `schedule_cron` valid, dan `test_case_ids` tidak kosong. Run dari jadwal diberi `triggered_by = schedule`.
+
 ## Legacy App
 
 Kode FastAPI + Vue lama masih ada di `backend/` dan `frontend/` sebagai referensi migrasi, tetapi bukan target deployment MVP baru.

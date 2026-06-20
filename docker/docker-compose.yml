@@ -14,6 +14,8 @@ services:
       - POSTGRES_USER=budibase
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
+      - BB_ADMIN_USER_EMAIL=admin@example.com
+      - BB_ADMIN_USER_PASSWORD=${BB_ADMIN_PASSWORD:-admin}
     depends_on:
       postgres:
         condition: service_healthy

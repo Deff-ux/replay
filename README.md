@@ -32,6 +32,8 @@ test.defrinogionaldo.com → http://localhost:8446
 | --- | --- |
 | `docker/docker-compose.yml` | Stack Budibase + PostgreSQL + Playwright Runner |
 | `db/init/001_schema.sql` | Schema PostgreSQL dan index untuk MVP |
+| `db/init/002_budibase_phase2.sql` | View, artifact metadata, dan seed jadwal untuk screen Budibase Fase 2 |
+| `budibase/README.md` | Blueprint screen, data source, dan REST binding Budibase |
 | `playwright-runner/` | Express API runner Playwright |
 | `scripts/cleanup-artifacts.sh` | Cleanup artifact + disk alert Telegram |
 | `scripts/backup-db.sh` | Backup PostgreSQL harian |
@@ -45,6 +47,7 @@ test.defrinogionaldo.com → http://localhost:8446
 | `POST` | `/api/run` | Queue single test case |
 | `POST` | `/api/suite` | Queue suite dengan maksimal 3 worker |
 | `GET` | `/api/status/:runId` | Polling status run |
+| `GET` | `/api/artifacts/:runId/*` | Mengambil screenshot/video/log artifact yang terdaftar |
 
 ## Legacy App
 

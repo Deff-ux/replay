@@ -1,0 +1,21 @@
+{% extends "demo/base.html" %}
+{% block title %}Employees{% endblock %}
+{% block content %}
+<h1>Employee List</h1>
+<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span><strong>128</strong> employees</span>
+        <a href="/demo/employees/add" class="btn btn-primary" id="add-employee-btn">+ Add Employee</a>
+    </div>
+    <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Position</th><th>Status</th></tr></thead>
+        <tbody>
+            <tr><td>EMP001</td><td>Budi Santoso</td><td>Engineering</td><td>Senior Developer</td><td><span class="badge badge-success">Active</span></td></tr>
+            <tr><td>EMP002</td><td>Siti Rahmawati</td><td>Marketing</td><td>Brand Manager</td><td><span class="badge badge-success">Active</span></td></tr>
+            <tr><td>EMP003</td><td>Ahmad Fauzi</td><td>Finance</td><td>Accountant</td><td><span class="badge badge-success">Active</span></td></tr>
+            <tr><td>EMP004</td><td>Dewi Lestari</td><td>HR</td><td>HR Coordinator</td><td><span class="badge badge-warning">On Leave</span></td></tr>
+            <tr><td>EMP005</td><td>Rudi Hermawan</td><td>Engineering</td><td>Frontend Developer</td><td><span class="badge badge-success">Active</span></td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

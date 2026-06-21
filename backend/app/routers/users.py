@@ -41,6 +41,22 @@ async def create_user(
     return item
 
 
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: int,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(require_role("admin")),
+):
+    item = await session.get(User, user_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="User not found")
+    if item.id == user.id:
+        raise HTTPException(status_code=405, detail="Cannot delete yourself")
+    await session.delete(item)
+    await session.commit()
+    return {"message": "User deleted"}
+
+
 @router.patch("/{user_id}", response_model=UserRead)
 async def update_user(
     user_id: int,

@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     openproject_api_key: str | None = None
     frontend_dist_dir: str = "/app/frontend/dist"
 
+    environments_config_path: str = "/app/backend/config/environments.yaml"
+
     class Config:
         env_file = ".env"
         env_prefix = "REPLAY_"

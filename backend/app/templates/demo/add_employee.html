@@ -1,0 +1,36 @@
+{% extends "demo/base.html" %}
+{% block title %}Add Employee{% endblock %}
+{% block content %}
+<h1>Add Employee</h1>
+<div class="card" style="max-width:500px;">
+    {% if created %}
+    <div class="alert alert-success flash" id="success-msg">✅ Employee <strong>{{ name }}</strong> created successfully!</div>
+    {% endif %}
+    <form method="POST" action="/demo/employees/add">
+        <div class="form-group">
+            <label for="emp-name">Full Name</label>
+            <input type="text" id="emp-name" name="name" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+            <label for="emp-nik">NIK</label>
+            <input type="text" id="emp-nik" name="nik" placeholder="Enter NIK" required>
+        </div>
+        <div class="form-group">
+            <label for="emp-dept">Department</label>
+            <select id="emp-dept" name="department">
+                <option>Engineering</option>
+                <option>Marketing</option>
+                <option>Finance</option>
+                <option>HR</option>
+                <option>Operations</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="emp-position">Position</label>
+            <input type="text" id="emp-position" name="position" placeholder="Enter position" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="save-employee-btn">Save Employee</button>
+        <a href="/demo/employees" class="btn" style="background:#eee;color:#333;margin-left:8px;">Cancel</a>
+    </form>
+</div>
+{% endblock %}

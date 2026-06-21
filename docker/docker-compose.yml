@@ -1,94 +1,29 @@
 services:
-  budibase:
-    image: budibase/budibase:latest
-    expose:
-      - "80"
-    volumes:
-      - budibase_data:/data
-    environment:
-      - BUDIBASE_ENVIRONMENT=production
-      - BUDIBASE_DB=postgres
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=testdashboard
-      - POSTGRES_USER=budibase
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - BB_ADMIN_USER_EMAIL=admin@example.com
-      - BB_ADMIN_USER_PASSWORD=${BB_ADMIN_PASSWORD:-admin}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:80 || curl -f http://127.0.0.1:80"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
-
-  budibase-setup:
+  replay:
     build:
-      context: ../budibase
-      dockerfile: Dockerfile
-    environment:
-      - BUDIBASE_URL=http://budibase:80
-      - BUDIBASE_USER=${BUDIBASE_USER:-admin@example.com}
-      - BUDIBASE_PASSWORD=${BUDIBASE_PASSWORD:-admin}
-      - DB_PASSWORD=${DB_PASSWORD}
-    depends_on:
-      budibase:
-        condition: service_healthy
-    profiles:
-      - setup
-
-  postgres:
-    image: postgres:16-alpine
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: replay:latest
+    ports:
+      - "8446:8446"
     volumes:
-      - pg_data:/var/lib/postgresql/data
-      - ../db/init:/docker-entrypoint-initdb.d:ro
+      - replay_data:/data
     environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=testdashboard
-      - POSTGRES_USER=budibase
+      - REPLAY_SECRET_KEY=${REPLAY_SECRET_KEY:-change-me-in-production}
+      - REPLAY_DATABASE_URL=/data/test.db
+      - REPLAY_ARTIFACTS_DIR=/data/artifacts
+      - REPLAY_SEEDS_DIR=/data/seeds
+      - REPLAY_ARTIFACT_RETENTION_DAYS=${ARTIFACT_RETENTION_DAYS:-30}
+      - REPLAY_TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - REPLAY_TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - REPLAY_OPENPROJECT_URL=${OPENPROJECT_URL:-}
+      - REPLAY_OPENPROJECT_API_KEY=${OPENPROJECT_API_KEY:-}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U budibase -d testdashboard"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  playwright-runner:
-    build:
-      context: ../playwright-runner
-    expose:
-      - "8550"
-    volumes:
-      - test_data:/data
-      - test_artifacts:/artifacts
-      - /var/log/testdashboard:/var/log/testdashboard
-    environment:
-      - DB_CONNECTION=postgresql://budibase:${DB_PASSWORD}@postgres:5432/testdashboard
-      - NODE_ENV=production
-      - HOST=0.0.0.0
-      - PORT=8550
-      - ARTIFACT_DIR=/artifacts
-      - IP_ALLOWLIST=${RUNNER_IP_ALLOWLIST:-127.0.0.1,::1,::ffff:127.0.0.1,172.,10.,192.168.}
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - MAX_PARALLEL_WORKERS=${MAX_PARALLEL_WORKERS:-3}
-      - DEFAULT_SCHEDULE_ENVIRONMENT=${DEFAULT_SCHEDULE_ENVIRONMENT:-staging}
-      - ARTIFACT_RETENTION_DAYS=${ARTIFACT_RETENTION_DAYS:-30}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
-      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-https://test.defrinogionaldo.com}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:8550/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8446/api/v1/health"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
     restart: unless-stopped
 
   cloudflared:
@@ -97,14 +32,8 @@ services:
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
-      budibase:
-        condition: service_started
-    networks:
-      - default
+      - replay
     restart: unless-stopped
 
 volumes:
-  budibase_data:
-  pg_data:
-  test_data:
-  test_artifacts:
+  replay_data:

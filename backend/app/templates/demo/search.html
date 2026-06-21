@@ -1,0 +1,31 @@
+{% extends "demo/base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<h1>Search Employee</h1>
+<div class="card">
+    <form method="GET" action="/demo/search" style="display:flex;gap:12px;align-items:flex-end;">
+        <div class="form-group" style="flex:1;margin:0;">
+            <label for="search-input">Search by NIK or Name</label>
+            <input type="text" id="search-input" name="q" placeholder="Type NIK or name..." value="{{ query }}" style="margin:0;">
+        </div>
+        <button type="submit" class="btn btn-primary" id="search-btn">Search</button>
+    </form>
+</div>
+{% if results is not none %}
+<div class="card">
+    <h3>{{ results|length }} result(s) for "{{ query }}"</h3>
+    {% if results %}
+    <table>
+        <thead><tr><th>NIK</th><th>Name</th><th>Department</th><th>Position</th></tr></thead>
+        <tbody>
+            {% for r in results %}
+            <tr class="search-row"><td>{{ r.nik }}</td><td>{{ r.name }}</td><td>{{ r.dept }}</td><td>{{ r.pos }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p id="no-results" style="color:#888;padding:20px 0;">No employees found matching "{{ query }}"</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

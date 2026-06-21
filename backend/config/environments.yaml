@@ -1,0 +1,44 @@
+environments:
+- auth_config:
+    pass: qa-2026-test
+    user: qa-tester
+  auth_type: basic
+  base_url: https://neo-staging.phirogo.com
+  is_active: true
+  name: Phiro Neo Staging
+  variables:
+    app: Neo
+    version: '2.0'
+- auth_config: {}
+  auth_type: none
+  base_url: https://neo.phirogo.com
+  is_active: false
+  name: Phiro Neo Production
+  variables:
+    app: Neo
+    version: '2.0'
+- auth_config:
+    pass: admin123
+    user: admin
+  auth_type: basic
+  base_url: https://hcms-staging.phirogo.com
+  is_active: true
+  name: HCMS Staging
+  variables:
+    app: HCMS
+- auth_config: {}
+  auth_type: none
+  base_url: http://localhost:8446/demo
+  is_active: true
+  name: Demo Local
+  variables:
+    app: Neo Demo
+users:
+- email: qa-admin@phirogo.com
+  password: admin123
+  role: admin
+  username: qa-admin
+- email: qa-tester@phirogo.com
+  password: tester123
+  role: qa
+  username: qa-tester

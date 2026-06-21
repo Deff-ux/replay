@@ -1,0 +1,28 @@
+{% extends "demo/base.html" %}
+{% block title %}Payslip{% endblock %}
+{% block content %}
+<h1>Generate Payslip</h1>
+<div class="card" style="max-width:500px;">
+    {% if generated %}
+    <div class="alert alert-success flash" id="payslip-msg">✅ Payslip for <strong>{{ employee }}</strong> ({{ period }}) generated! <a href="#" style="color:#1a73e8;">Download PDF</a></div>
+    {% endif %}
+    <form method="POST" action="/demo/payslip">
+        <div class="form-group">
+            <label for="payslip-employee">Employee</label>
+            <select id="payslip-employee" name="employee_id">
+                <option value="1">Budi Santoso (EMP001)</option>
+                <option value="2">Siti Rahmawati (EMP002)</option>
+                <option value="3">Ahmad Fauzi (EMP003)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="payslip-period">Period</label>
+            <select id="payslip-period" name="period">
+                <option value="2026-05">May 2026</option>
+                <option value="2026-06" selected>June 2026</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="generate-payslip-btn">Generate Payslip</button>
+    </form>
+</div>
+{% endblock %}

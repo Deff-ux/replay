@@ -1,0 +1,21 @@
+{% extends "demo/base.html" %}
+{% block title %}Leave Requests{% endblock %}
+{% block content %}
+<h1>Pending Leave Requests</h1>
+<div class="card">
+    {% if approved %}
+    <div class="alert alert-success flash" id="approve-msg">✅ Leave request approved!</div>
+    {% endif %}
+    <table>
+        <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+            <tr><td>Dewi Lestari</td><td>Annual</td><td>2026-06-22</td><td>2026-06-24</td><td><span class="badge badge-warning">Pending</span></td>
+                <td><a href="/demo/leave/approve/1" class="btn btn-success" style="padding:4px 12px;font-size:12px;">Approve</a></td></tr>
+            <tr><td>Rudi Hermawan</td><td>Sick</td><td>2026-06-23</td><td>2026-06-23</td><td><span class="badge badge-warning">Pending</span></td>
+                <td><a href="/demo/leave/approve/2" class="btn btn-success" style="padding:4px 12px;font-size:12px;">Approve</a></td></tr>
+            <tr><td>Ani Wijaya</td><td>Annual</td><td>2026-07-01</td><td>2026-07-05</td><td><span class="badge badge-warning">Pending</span></td>
+                <td><a href="/demo/leave/approve/3" class="btn btn-success" style="padding:4px 12px;font-size:12px;">Approve</a></td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

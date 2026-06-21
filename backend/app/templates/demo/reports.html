@@ -1,0 +1,28 @@
+{% extends "demo/base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1>Attendance Reports</h1>
+<div class="card">
+    {% if exported %}
+    <div class="alert alert-success flash" id="export-msg">✅ Report for <strong>{{ month }}</strong> exported successfully! ({{ rows }} rows)</div>
+    {% endif %}
+    <form method="POST" action="/demo/reports" style="display:flex;gap:12px;align-items:flex-end;">
+        <div class="form-group" style="flex:1;margin:0;">
+            <label for="report-month">Select Month</label>
+            <select id="report-month" name="month">
+                <option value="2026-01">January 2026</option>
+                <option value="2026-02">February 2026</option>
+                <option value="2026-03">March 2026</option>
+                <option value="2026-04">April 2026</option>
+                <option value="2026-05">May 2026</option>
+                <option value="2026-06" selected>June 2026</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="export-btn">Export Report</button>
+    </form>
+    <div id="chart-area" style="margin-top:24px;padding:40px;text-align:center;background:#f8f9fa;border-radius:8px;">
+        <div style="font-size:48px;margin-bottom:8px;">📊</div>
+        <p style="color:#666;">Attendance chart will appear here after selecting a month</p>
+    </div>
+</div>
+{% endblock %}

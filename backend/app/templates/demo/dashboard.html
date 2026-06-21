@@ -1,0 +1,14 @@
+{% extends "demo/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="card" id="dashboard-welcome">
+    <h2>Welcome back, {{ username }}! 👋</h2>
+    <p style="color:#666;margin-top:8px;">Current route: <code>/dashboard</code></p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+    <div class="card"><strong>👥 Total Employees</strong><br><span style="font-size:28px;color:#1a73e8;">128</span></div>
+    <div class="card"><strong>📋 Pending Leaves</strong><br><span style="font-size:28px;color:#e37400;">5</span></div>
+    <div class="card"><strong>✅ Today Present</strong><br><span style="font-size:28px;color:#188038;">112</span></div>
+</div>
+{% endblock %}

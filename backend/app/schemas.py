@@ -129,6 +129,23 @@ class SeedCleanupRequest(BaseModel):
     method: str = "prefix"
 
 
+class RunStepRead(BaseModel):
+    id: int
+    run_id: int
+    test_case_id: int | None = None
+    step_index: int
+    action_description: str
+    status: str
+    duration_ms: int | None = None
+    error_message: str | None = None
+    screenshot_path: str | None = None
+    video_path: str | None = None
+    console_log: list = Field(default_factory=list)
+    dom_snapshot_path: str | None = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
 class WebhookRunRequest(BaseModel):
     suite_id: int | None = None
     test_case_ids: list[int] = Field(default_factory=list)
